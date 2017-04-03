@@ -35,5 +35,16 @@ module CgspaceRestApi
 
     # CGSpace URL for default thumbnail
     config.default_thumbnail_url = 'https://cgspace.cgiar.org/themes/0_CGIAR/images/fallback-mimetypes/application-x-zerosize.svg'
+
+    # DSpace Metadata Constants
+    config.x.BITSTREAM = 0
+    config.x.BUNDLE = 1
+    config.x.ITEM = 2
+    config.x.COLLECTION = 3
+    config.x.COMMUNITY = 4
+    config.x.SITE = 5
+    config.x.GROUP = 6
+    config.x.EPERSON = 7
+
   end
 end
