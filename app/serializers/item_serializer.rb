@@ -1,5 +1,15 @@
 class ItemSerializer < ApplicationSerializer
   attribute :item_id, key: :id
+
+  attribute :collection do
+    object.collection.metadata.where(resource_type_id: Rails.configuration.x.COLLECTION).each do |metadatum|
+      if metadatum.field.field_type.short_id == 'dc' and metadatum.field.element == 'title'
+        @title = metadatum.text_value
+      end
+    end
+    @title
+  end
+
   attribute :handle do
     self.full_handle
   end
@@ -8,7 +18,15 @@ class ItemSerializer < ApplicationSerializer
     self.thumbnail
   end
 
-  has_many :metadata
+  has_many :metadata do
+    @public_metadata = []
+    object.metadata.each do |metadatum|
+      if metadatum.field.qualifier != 'provenance'  # remove private metadata
+        @public_metadata.push(metadatum)
+      end
+    end
+    @public_metadata
+  end
 
   def thumbnail
     object.bitstreams.each do |bitstream|
@@ -20,9 +38,9 @@ class ItemSerializer < ApplicationSerializer
     end
 
     if !@thumb.nil? then
-      CgspaceRestApi::Application.config.base_thumbnail_url + "#{self.handle}/#{@thumb}"
+      Rails.configuration.base_thumbnail_url + "#{self.handle}/#{@thumb}"
     else
-      CgspaceRestApi::Application.config.default_thumbnail_url
+      Rails.configuration.default_thumbnail_url
     end
   end
 
@@ -31,6 +49,6 @@ class ItemSerializer < ApplicationSerializer
   end
 
   def full_handle
-    !object.handle.nil? ? CgspaceRestApi::Application.config.base_handle_url + object.handle.handle : ''
+    !object.handle.nil? ? Rails.configuration.base_handle_url + object.handle.handle : ''
   end
 end
