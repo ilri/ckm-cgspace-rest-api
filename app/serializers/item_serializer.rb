@@ -2,12 +2,10 @@ class ItemSerializer < ApplicationSerializer
   attribute :item_id, key: :id
 
   attribute :collection do
-    object.collection.metadata.where(resource_type_id: Rails.configuration.x.COLLECTION).each do |metadatum|
-      if metadatum.field.field_type.short_id == 'dc' and metadatum.field.element == 'title'
-        @title = metadatum.text_value
-      end
+    if !object.collection.nil?
+      @name = object.collection.name
     end
-    @title
+    @name
   end
 
   attribute :handle do
