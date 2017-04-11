@@ -5,6 +5,7 @@ class Item < ApplicationRecord
   has_one :handle, -> { where(resource_type_id: Rails.configuration.x.ITEM) },:foreign_key => "resource_id"
   has_many :metadata, -> { where(resource_type_id: Rails.configuration.x.ITEM) }, :foreign_key => "resource_id"
   has_many :fields, :through => :metadata
+  has_many :field_types, :through => :fields
   has_many :item_bundles, :foreign_key => "item_id"
   has_many :bundles, :through => :item_bundles
   has_many :bitstreams, :through => :bundles
