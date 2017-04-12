@@ -46,5 +46,10 @@ module CgspaceRestApi
     config.x.GROUP = 6
     config.x.EPERSON = 7
 
+    # Default Options
+    config.x.LIMIT = 20
+    config.x.PAGE = 1
+    config.x.ORDER = 'item_id desc'
+
   end
 end
