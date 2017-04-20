@@ -58,5 +58,6 @@ module CgspaceRestApi
       end
     end
 
+    #ActiveModelSerializers.config.adapter = :json_api
   end
 end
