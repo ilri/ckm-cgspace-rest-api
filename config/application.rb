@@ -28,13 +28,13 @@ module CgspaceRestApi
     config.api_only = true
 
     # CGSpace URL base for handle
-    config.base_handle_url = 'https://cgspace.cgiar.org/handle/'
+    config.base_handle_url = 'https://dspacetest.cgiar.org/handle/'
 
     # CGSpace URL base for thumbnail
-    config.base_thumbnail_url = 'https://cgspace.cgiar.org/bitstream/handle/'
+    config.base_thumbnail_url = 'https://dspacetest.cgiar.org/bitstream/handle/'
 
     # CGSpace URL for default thumbnail
-    config.default_thumbnail_url = 'https://cgspace.cgiar.org/themes/0_CGIAR/images/fallback-mimetypes/application-x-zerosize.svg'
+    config.default_thumbnail_url = 'https://dspacetest.cgiar.org/themes/0_CGIAR/images/fallback-mimetypes/application-x-zerosize.svg'
 
     # DSpace Metadata Constants
     config.x.BITSTREAM = 0
@@ -58,6 +58,5 @@ module CgspaceRestApi
       end
     end
 
-    #ActiveModelSerializers.config.adapter = :json_api
   end
 end
