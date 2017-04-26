@@ -49,7 +49,6 @@ module CgspaceRestApi
     # Default Options
     config.x.LIMIT = 20
     config.x.PAGE = 1
-    config.x.ORDER = 'item_id desc'
 
     config.middleware.insert_before 0, "Rack::Cors" do
       allow do

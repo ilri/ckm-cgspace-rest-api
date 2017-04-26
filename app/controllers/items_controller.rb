@@ -2,8 +2,14 @@ class ItemsController < ApplicationController
   def index
     @options = self.options(params)
 
-    @items = Item.paginate(page: @options[:page], per_page: @options[:limit]).order(@options[:order]).distinct.joins(:field_types)
+    @items = Item.select('item.*, sorting_metadata.text_value')
+                 .paginate(page: @options[:page], per_page: @options[:limit])
+                 .joins('INNER JOIN "metadatavalue" AS "sorting_metadata" ON "item"."item_id" = "sorting_metadata"."resource_id"')
+                 .where("sorting_metadata.metadata_field_id = 15")
+                 .order("sorting_metadata.text_value DESC")
+                 .distinct
 
+    @items = @items.joins(:field_types)
     @items = @items.where("metadatavalue.text_value like :metadata_value", {metadata_value: "%#{params[:value]}%"}) if params[:value].present?
     @items = @items.where("metadatafieldregistry.element = :element", {element: params[:element]}) if params[:element].present?
     @items = @items.where("metadatafieldregistry.qualifier = :qualifier", {qualifier: params[:qualifier]}) if params[:qualifier].present?
@@ -28,8 +34,7 @@ class ItemsController < ApplicationController
   def options(params)
     {
         page: params[:page] ? params[:page].to_i : Rails.configuration.x.PAGE,
-        limit: params[:limit] ? self.least(params[:limit].to_i, Rails.configuration.x.LIMIT) : Rails.configuration.x.LIMIT,
-        order: params[:order] ? params[:sort] : Rails.configuration.x.ORDER
+        limit: params[:limit] ? self.least(params[:limit].to_i, Rails.configuration.x.LIMIT) : Rails.configuration.x.LIMIT
     }
   end
 
