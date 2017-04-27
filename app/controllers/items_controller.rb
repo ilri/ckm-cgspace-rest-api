@@ -3,7 +3,7 @@ class ItemsController < ApplicationController
 @api {get} /items/ Request CGSpace Items
 @apiName GetItems
 @apiGroup Item
-@apiVersion 0.1.1
+@apiVersion 0.2.0
 
 @apiDescription Use this endpoint to fetch items from [CGSpace](https://cgspace.cgiar.org/). It allows querying
 for items using the following options:
