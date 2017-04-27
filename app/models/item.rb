@@ -16,4 +16,13 @@ class Item < ApplicationRecord
   has_many :communities, through: :collections
 
   belongs_to :collection, :foreign_key => "owning_collection"
+
+  def self.with_metadatum(metadatum)
+    @items = Item.joins(:field_types)
+    @items = @items.where("metadataschemaregistry.short_id = :namespace", {namespace: metadatum[:namespace]}) if metadatum[:namespace].present?
+    @items = @items.where("metadatafieldregistry.element = :element", {element: metadatum[:element]}) if metadatum[:element].present?
+    @items = @items.where("metadatafieldregistry.qualifier = :qualifier", {qualifier: metadatum[:qualifier]}) if metadatum[:qualifier].present?
+    @items = @items.where("metadatavalue.text_value ILIKE :value", {value: "%#{metadatum[:value]}%"}) if metadatum[:value].present?
+    @items.pluck("item_id")
+  end
 end

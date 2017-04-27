@@ -3,7 +3,7 @@ class ItemsController < ApplicationController
 @api {get} /items/ Request CGSpace Items
 @apiName GetItems
 @apiGroup Item
-@apiVersion 0.1.1
+@apiVersion 0.2.0
 
 @apiDescription Use this endpoint to fetch items from [CGSpace](https://cgspace.cgiar.org/). It allows querying
 for items using the following options:
@@ -18,12 +18,17 @@ for items using the following options:
       - *page* - the page number to fetch
       - *limit* - the maximum number of items to return per page
 
+>**Note:** To filter result by multiple metadata, separate each metadatum value using the `|` character, for example:
+>
+>`/items?namespace=cg|dc&element=subject|date&qualifier=ilri|issued&value=LIVESTOCK|2016-04` would mean filter items with metadata
+>entries `cg.subject.ilri` containing `LIVESTOCK` and `dc.date.issued` containing `2016-04`.
+
 @apiParam {Number} [community] The CGSpace community id under which the Items would be found.
 @apiParam {Number} [collection] The id of the owning collection of the Items.
-@apiParam {String} [namespace] The namespace of the Item metadata.
-@apiParam {String} [qualifier] The qualifier of the Item metadata.
-@apiParam {String} [element] The element of the Item metadata.
-@apiParam {String} [value] The value of the Item metadata.
+@apiParam {String} [namespace] The namespace of the Item metadata. Use the pipe `|` character for multiple values, e.g. `namespace=cg|dc`
+@apiParam {String} [element] The element of the Item metadata. Use the pipe `|` character for multiple values, e.g. `element=subject|date`
+@apiParam {String} [qualifier] The qualifier of the Item metadata. Use the pipe `|` character for multiple values, e.g. `qualifier=ilri|issued`
+@apiParam {String} [value] The value of the Item metadata. Use the pipe `|` character for multiple values, e.g. `value=LIVESTOCK|2016-04`. These values are case insensitive; meaning `LIVESTOCK` and `livestock` would give the same results.
 @apiParam {Number} [page] The page number of the Items list to fetch.
 @apiParam {Number} [limit] The maximum number of elements to get per page, the highest value is 20.
 
@@ -42,6 +47,16 @@ for items using the following options:
 // Example Response 1: /items?community=1
 HTTP/1.1 200 OK
 {
+  "options": {
+    "current_page": 1,
+    "next_page": 2,
+    "prev_page": null,
+    "total_pages": 675,
+    "total_count": 13489,
+    "params": {
+      "community": "1"
+    }
+  },
   "items": [
     {
       "id": 35504,
@@ -71,36 +86,26 @@ HTTP/1.1 200 OK
       ]
     }
     ... // Maximum of 20 items
-  ],
-  "options": {
-    "current_page": 1,
-    "next_page": 2,
-    "prev_page": null,
-    "total_pages": 675,
-    "total_count": 13489,
-    "params": {
-      "community": "1"
-    }
-  }
+  ]
 }
 
 =end
   def index
-    #params = params ? params.reject{|p| p.empty?} : params
     @options = self.options(params)
+    @paramGroups = self.groupParams(params)
 
     @items = Item.select('item.*, sorting_metadata.text_value')
                  .paginate(page: @options[:page], per_page: @options[:limit])
                  .joins('INNER JOIN "metadatavalue" AS "sorting_metadata" ON "item"."item_id" = "sorting_metadata"."resource_id"')
-                 .where("sorting_metadata.metadata_field_id = 15")
+                 .where("sorting_metadata.metadata_field_id = 15") # dc.date.issued
                  .order("sorting_metadata.text_value DESC")
                  .distinct
 
     @items = @items.joins(:field_types)
-    @items = @items.where("metadatavalue.text_value like :metadata_value", {metadata_value: "%#{params[:value]}%"}) if params[:value].present?
-    @items = @items.where("metadatafieldregistry.element = :element", {element: params[:element]}) if params[:element].present?
-    @items = @items.where("metadatafieldregistry.qualifier = :qualifier", {qualifier: params[:qualifier]}) if params[:qualifier].present?
-    @items = @items.where("metadataschemaregistry.short_id = :namespace", {namespace: params[:namespace]}) if params[:namespace].present?
+
+    @paramGroups.each_with_index do |group, index|
+      @items = @items.where("item.item_id in (?)", Item.with_metadatum(group))
+    end
 
     if params[:community].present?
       @community = Community.find(params[:community])
@@ -110,13 +115,32 @@ HTTP/1.1 200 OK
     @items = @items.where(owning_collection: params[:collection]) if params[:collection].present?
 
     response = {
-        items: ActiveModel::Serializer::CollectionSerializer.new(@items, each_serializer: ItemSerializer, root: false),
-        options: meta_attributes(@items, {params: params.except(:page, :controller, :action)})
+        options: meta_attributes(@items, {params: params.except(:page, :controller, :action)}),
+        items: ActiveModel::Serializer::CollectionSerializer.new(@items, each_serializer: ItemSerializer, root: false)
     }
 
     render json: response
   end
 
+  def groupParams(params)
+    @namespaces = params[:namespace] ? params[:namespace].split("|") : []
+    @qualifiers = params[:qualifier] ? params[:qualifier].split("|") : []
+    @elements = params[:element] ? params[:element].split("|") : []
+    @values = params[:value] ? params[:value].split("|") : []
+    @groupedParams = []
+    @maxParamNumbers = [@namespaces.length, @elements.length, @qualifiers.length, @values.length].max
+
+    for index in 0...@maxParamNumbers do
+      @paramGroup = {}
+      @paramGroup[:namespace] = @namespaces[index] if @namespaces and @namespaces[index].present?
+      @paramGroup[:element] = @elements[index] if @elements and @elements[index].present?
+      @paramGroup[:qualifier] = @qualifiers[index] if @qualifiers and @qualifiers[index].present?
+      @paramGroup[:value] = @values[index] if @values and @values[index].present?
+      @groupedParams.push(@paramGroup)
+    end
+
+    @groupedParams
+  end
 
   def options(params)
     {
