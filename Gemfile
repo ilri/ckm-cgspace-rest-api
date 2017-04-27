@@ -5,13 +5,13 @@ git_source(:github) do |repo_name|
   "https://github.com/#{repo_name}.git"
 end
 
-
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '~> 5.0.2'
 # Use postgres as the database for Active Record
 gem 'pg'
 # Establish relationships across multiple many-to-many tables
 gem 'nested_has_many_through', '~> 0.0.2'
+
 # Serialize JSON output
 gem 'active_model_serializers', '~> 0.10.0'
 # Use Puma as the app server
