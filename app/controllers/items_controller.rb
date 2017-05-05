@@ -104,7 +104,7 @@ HTTP/1.1 200 OK
     @items = @items.joins(:field_types)
 
     @paramGroups.each_with_index do |group, index|
-      @items = @items.where("item.item_id in (?)", Item.with_metadatum(group))
+      @items = @items.where("item.item_id in (?) AND item.in_archive = true AND item.discoverable = true", Item.with_metadatum(group))
     end
 
     if params[:community].present?
