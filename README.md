@@ -7,3 +7,9 @@ A custom REST API for [CGSpace](https://cgspace.cgiar.org/):
  > CGSpace is a collaboration of several centers and research programs. It is hosted by the International Livestock Research Institute.
  
  The primary purpose of this tool is to enable thrid-party applications to easily query items in the CGSpace repository. It **DOES NOT** nor **WILL IT NOT** provide the standard [CRUD](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete) operations on the repository.
+ 
+ # Running the application
+ 
+```
+RAILS_DB_USER=username RAILS_DB_PASS=password RAILS_DB_NAME=database rails s
+```
